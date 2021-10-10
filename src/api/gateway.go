@@ -1,34 +1,17 @@
-package main
+package api
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
-	"time"
+	"task-lambda-sqs-dynamodb/src/lib/db"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
-	"github.com/google/uuid"
+	sqs "task-lambda-sqs-dynamodb/src/lib/stream"
 )
-
-func init() {
-
-}
-
-type Record struct {
-	ID				string	`json:"id,omitempty"`
-	ProcessStatus	bool	`json:"processStatus"`
-	Data			string	`json:"data"`
-	RequestID		string	`json:"requestID"`
-	RequestDate		string	`json:"requestDate,omitempty"`	// YYYYMMDD
-	ProcessDate		string	`json:"processDate,omitempty"`	// YYYYMMDD
-}
 
 type Response events.APIGatewayProxyResponse
 type Request events.APIGatewayProxyRequest
@@ -40,6 +23,48 @@ type RequestBody struct {
 type ResponseBody struct {
 	Id      	string	`json:"Id,omitempty"`
 	Description	string	`json:"Description,omitempty"`
+}
+
+var logger *log.Logger
+var logPrefix = "(task1-gateway) "
+
+var queue *sqs.Config
+var dynamoDB db.IDynamoDB
+
+func init() {
+
+	logger = log.New(os.Stdout, logPrefix, log.LstdFlags|log.Lshortfile)
+
+	// Instantiate the queue with service connection
+	queue1, err1 := sqs.NewSQS(sqs.Config{
+		// aws config
+		MaxRetries:			10,
+
+		BatchSize:         	10,
+		VisibilityTimeout: 	120,
+		WaitSeconds:       	20,
+
+		// misc config
+		RunInterval: 		20,
+		RunOnce:     		true,
+		MaxHandlers: 		100,
+		BusyTimeout: 		30,
+	})
+
+	if err1 == nil {
+		logger.Println(err1)
+	} else {
+		queue = queue1
+	}
+
+	db1, err2 := db.GetDatabase()
+
+	if err2 == nil {
+		logger.Println(err2)
+	} else {
+		dynamoDB = db1
+	}
+
 }
 
 func ValidateInputs(request Request) (RequestBody, error) {
@@ -80,58 +105,39 @@ func Handler(request Request) (Response, error) {
 		}, nil
 	}
 
-	temp := Record{
-		ID: "",
-		ProcessStatus: false,
-		Data: request.Body,
-		RequestID: request.RequestContext.RequestID,
-		RequestDate: time.Now().String(),
-		ProcessDate: "",
-	}
+	reqs := createRequests(NewBody.EventsCount, request.Body, request.RequestContext.RequestID)
+	errSQS := queue.Enqueue(createMessagesToEnqueue(reqs))
 
-	for i := 0; i < NewBody.EventsCount; i++ {
-		temp.ID = uuid.NewString()
-		// Serialization/Encoding "NewBody" in "item" for using in DynamoDB functions.
-		record, _ := dynamodbattribute.MarshalMap(temp)
+	if errSQS == nil {
+		errDB := dynamoDB.RecordsCreate(reqs)
+		if errDB != nil {
+			logger.Println(errDB)
+			return Response{StatusCode: 500}, errDB
+		} else {
+			var buf bytes.Buffer
 
-		// Till now the user have provided a valid data input.
-		// Let's add it to the DynamoDB table.
-		_, err = TestAws.Put(record)
+			body, errMar := json.Marshal(reqs)
+			if errMar != nil {
+				return Response{StatusCode: 500}, errMar
+			}
+			json.HTMLEscape(&buf, body)
 
-		// If internal database errors occurred, return HTTP error code 500.
-		if err != nil {
-			return events.APIGatewayProxyResponse{
-				Body:       "Internal Server Error\nDatabase error.",
-				StatusCode: 500,
-			}, nil
+			resp := Response{
+				StatusCode:      200,
+				IsBase64Encoded: false,
+				Body:            buf.String(),
+				Headers: map[string]string{
+					"Content-Type":           "application/json",
+					"X-MyCompany-Func-Reply": "hello-handler",
+				},
+			}
+
+			return resp, nil
 		}
-
-		// Serialization/Encoding "NewBody" to JSON.
-		jsonResponse, _ := json.Marshal(NewBody)
-		return events.APIGatewayProxyResponse{
-			Body: string(jsonResponse),
-			// Everything looks fine, return HTTP 201
-			StatusCode: 201,
-		}, nil
+	} else {
+		logger.Println("Queue Insert Failed...")
+		return Response{StatusCode: 500}, errSQS
 	}
-
-	//body, err := json.Marshal(map[string]interface{}{
-	//	"message": "Okay so your other function also executed successfully!",
-	//})
-	//if err != nil {
-	//	return Response{StatusCode: 404}, err
-	//}
-	//json.HTMLEscape(&buf, body)
-	//
-	//resp := Response{
-	//	StatusCode:      200,
-	//	IsBase64Encoded: false,
-	//	Body:            buf.String(),
-	//	Headers: map[string]string{
-	//		"Content-Type":           "application/json",
-	//		"X-MyCompany-Func-Reply": "world-handler",
-	//	},
-	//}
 }
 
 func main() {
