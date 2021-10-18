@@ -23,8 +23,9 @@ frameworkVersion: '2'
 provider:
   name: aws
   runtime: go1.x
-  stage: dev
   region: us-east-1
+  profile: ${env:AWS_PROFILE, 'default'}
+  stage: ${env:STAGE_NAME, 'dev'}
   lambdaHashingVersion: 20201221
 
   iamRoleStatements:
@@ -82,18 +83,8 @@ resources:
         AttributeDefinitions:
           - AttributeName: "@id"
             AttributeType: S
-          - AttributeName: data
-            AttributeType: S
-          - AttributeName: requestID
-            AttributeType: S
-          - AttributeName: requestDate
-            AttributeType: S
-          - AttributeName: processDate
-            AttributeType: S
-          - AttributeName: processStatus
-            AttributeType: B
         KeySchema:
-          - AttributeName: id
+          - AttributeName: "@id"
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1

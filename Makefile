@@ -1,3 +1,7 @@
+
+.EXPORT_ALL_VARIABLES:
+STAGE_NAME ?= dev
+
 .PHONY: build clean deploy gomodgen
 
 build: gomodgen
