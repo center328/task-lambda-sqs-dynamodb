@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/center328/task-lambda-sqs-dynamodb/src/api"
 	"log"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -45,7 +44,7 @@ func Handler() {
 
 		logger.Println("Processing:", *msg.MessageId, *msg.Body)
 
-		record := api.Record{}
+		record := db.Record{}
 		err := json.Unmarshal([]byte(*msg.Body), &record)
 
 		if err != nil {

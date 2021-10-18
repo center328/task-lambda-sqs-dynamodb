@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/guregu/dynamo"
-	"github.com/center328/task-lambda-sqs-dynamodb/src/api"
 )
 
 type DynamoDatabase struct {
@@ -44,7 +43,7 @@ func (db *DynamoDatabase) RecordsReadById(id string) (RecordEntity, error) {
 	return result, lastError
 }
 
-func (db *DynamoDatabase) RecordsCreate(records []api.Record) error {
+func (db *DynamoDatabase) RecordsCreate(records []Record) error {
 	recordEntities := RecordsMapper(records)
 	var lastError error
 	table := db.DB.Table(TABLE_RECORDS)

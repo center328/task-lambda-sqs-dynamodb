@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"github.com/aws/aws-sdk-go/aws"
 	awsSqs "github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/center328/task-lambda-sqs-dynamodb/src/lib/db"
 	"github.com/google/uuid"
 	"strconv"
 	"time"
 )
 
-func createRequests(size int, body string, requestID string) []Record {
-	var records []Record
+func createRequests(size int, body string, requestID string) []db.Record {
+	var records []db.Record
 
-	var temp = Record{
+	var temp = db.Record{
 		ID: "",
 		ProcessStatus: false,
 		Data: body,
@@ -29,7 +30,7 @@ func createRequests(size int, body string, requestID string) []Record {
 	return records
 }
 
-func createMessagesToEnqueue(msgs []Record)  []*awsSqs.SendMessageBatchRequestEntry {
+func createMessagesToEnqueue(msgs []db.Record)  []*awsSqs.SendMessageBatchRequestEntry {
 	var msgBatch []*awsSqs.SendMessageBatchRequestEntry
 	for i := 0; i < len(msgs); i++ {
 		data, _ := json.Marshal(msgs[i])

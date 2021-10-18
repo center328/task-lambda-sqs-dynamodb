@@ -1,10 +1,6 @@
 package db
 
-import (
-	"github.com/center328/task-lambda-sqs-dynamodb/src/api"
-)
-
-func RecordsMapper(records []api.Record) []RecordEntity {
+func RecordsMapper(records []Record) []RecordEntity {
 
 	recordEntities := make([]RecordEntity, 0)
 	for _, record := range records {
