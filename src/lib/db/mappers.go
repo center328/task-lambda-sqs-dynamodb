@@ -1,7 +1,7 @@
 package db
 
 import (
-	"task-lambda-sqs-dynamodb/src/api"
+	"github.com/center328/task-lambda-sqs-dynamodb/src/api"
 )
 
 func RecordsMapper(records []api.Record) []RecordEntity {

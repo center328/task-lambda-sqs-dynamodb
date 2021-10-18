@@ -2,14 +2,14 @@ package handler
 
 import (
 	"encoding/json"
+	"github.com/center328/task-lambda-sqs-dynamodb/src/api"
 	"log"
-	"task-lambda-sqs-dynamodb/src/api"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"task-lambda-sqs-dynamodb/src/lib/db"
-	sqs "task-lambda-sqs-dynamodb/src/lib/stream"
-	"time"
 	awsSqs "github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/center328/task-lambda-sqs-dynamodb/src/lib/db"
+	sqs "github.com/center328/task-lambda-sqs-dynamodb/src/lib/stream"
+	"time"
 )
 
 var logger *log.Logger

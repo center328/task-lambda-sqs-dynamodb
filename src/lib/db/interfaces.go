@@ -1,6 +1,6 @@
 package db
 
-import "task-lambda-sqs-dynamodb/src/api"
+import "github.com/center328/task-lambda-sqs-dynamodb/src/api"
 
 type IDynamoDB interface {
 	RecordsReadAll() ([]RecordEntity, error)

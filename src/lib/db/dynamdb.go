@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/guregu/dynamo"
-	"task-lambda-sqs-dynamodb/src/api"
+	"github.com/center328/task-lambda-sqs-dynamodb/src/api"
 )
 
 type DynamoDatabase struct {

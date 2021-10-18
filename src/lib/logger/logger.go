@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"task-lambda-sqs-dynamodb/src/lib"
+	"github.com/center328/task-lambda-sqs-dynamodb/src/lib"
 )
 
 const (

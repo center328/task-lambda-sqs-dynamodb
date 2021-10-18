@@ -51,7 +51,6 @@ provider:
 
 package:
   patterns:
-    - '!./**'
     - ./bin/**
 
 functions:

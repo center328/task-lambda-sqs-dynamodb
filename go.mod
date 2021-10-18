@@ -1,4 +1,4 @@
-module task-lambda-sqs-dynamodb
+module github.com/center328/task-lambda-sqs-dynamodb
 
 go 1.17
 

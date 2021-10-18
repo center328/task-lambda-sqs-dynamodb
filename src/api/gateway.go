@@ -6,11 +6,11 @@ import (
 	"errors"
 	"log"
 	"os"
-	"task-lambda-sqs-dynamodb/src/lib/db"
+	"github.com/center328/task-lambda-sqs-dynamodb/src/lib/db"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	sqs "task-lambda-sqs-dynamodb/src/lib/stream"
+	sqs "github.com/center328/task-lambda-sqs-dynamodb/src/lib/stream"
 )
 
 type Response events.APIGatewayProxyResponse
