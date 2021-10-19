@@ -51,12 +51,16 @@ provider:
             - Arn
 
 package:
-  patterns:
-    - ./bin/**
+  individually: true
+  exclude:
+    - ./**
 
 functions:
   gateway:
     handler: bin/gateway
+    package:
+      include:
+        - bin/gateway
     events:
       - http:
           path: gateway
@@ -64,6 +68,9 @@ functions:
           cors: true
   handler:
     handler: bin/handler
+    package:
+      include:
+        - bin/handler
     events:
       - sqs:
           arn:
