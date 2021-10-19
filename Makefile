@@ -2,7 +2,7 @@
 .EXPORT_ALL_VARIABLES:
 STAGE_NAME ?= dev
 
-.PHONY: build clean deploy gomodgen
+.PHONY: build clean deploy gomodgen tidy
 
 build: gomodgen
 	export GO111MODULE=on
@@ -14,3 +14,7 @@ clean:
 
 deploy: clean build
 	sls deploy --verbose
+
+tidy:
+	# To update and prune the dependencies
+	go mod tidy
