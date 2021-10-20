@@ -30,12 +30,9 @@ func init() {
 	once.Do(func() {
 		instance = Config{}
 
-		LoadFromEnvFile(".env")
+		LoadFromEnvFile("./.env")
 		if err := env.Parse(&instance); err != nil {
 			log.Fatal(err)
-		} else {
-			os.Setenv("AWS_ACCESS_KEY_ID", instance.AWSKey)
-			os.Setenv("AWS_SECRET_ACCESS_KEY", instance.AWSSecret)
 		}
 	})
 }

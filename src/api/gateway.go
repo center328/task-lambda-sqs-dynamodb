@@ -65,7 +65,7 @@ func init() {
 		BusyTimeout: 		30,
 	})
 
-	if err1 == nil {
+	if err1 != nil {
 		logger.Println(err1)
 	} else {
 		queue = queue1
@@ -73,7 +73,7 @@ func init() {
 
 	db1, err2 := db.GetDatabase()
 
-	if err2 == nil {
+	if err2 != nil {
 		logger.Println(err2)
 	} else {
 		dynamoDB = db1

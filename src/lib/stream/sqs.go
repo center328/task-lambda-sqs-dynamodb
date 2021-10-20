@@ -30,13 +30,7 @@ func NewSQS(opts Config) (*Config, error) {
 		return nil, validateErr
 	}
 
-	// Validate creds
-	if opts.AWSKey != "" {
-		os.Setenv("AWS_ACCESS_KEY_ID", opts.AWSKey)
-	}
-	if opts.AWSSecret != "" {
-		os.Setenv("AWS_SECRET_ACCESS_KEY", opts.AWSSecret)
-	}
+	logger.Println("configs", fmt.Sprintf("%#v", opts))
 
 	creds := credentials.NewEnvCredentials()
 	if _, err := creds.Get(); err != nil {
@@ -65,13 +59,13 @@ func NewSQS(opts Config) (*Config, error) {
 		return nil, errors.New("Unable to create a service connection with AWS SQS")
 	}
 
-	logger.Println("Fetching queue attributes")
-	if _, err := svc.GetQueueAttributes(&sqs.GetQueueAttributesInput{
-		QueueUrl: &opts.URL,
-	}); err != nil {
-		logger.Println("Unable to fetch queue attributes", err)
-		return nil, errors.New("Unable to get queue attributes")
-	}
+	//logger.Println("Fetching queue attributes")
+	//if _, err := svc.GetQueueAttributes(&sqs.GetQueueAttributesInput{
+	//	QueueUrl: &opts.URL,
+	//}); err != nil {
+	//	logger.Println("Unable to fetch queue attributes", err)
+	//	return nil, errors.New("Unable to get queue attributes")
+	//}
 	logger.Println("Connected to Queue")
 
 	opts.svc = svc

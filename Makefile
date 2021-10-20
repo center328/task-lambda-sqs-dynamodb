@@ -1,20 +1,18 @@
+.PHONY: clean tidy build deploy deployAll
 
-.EXPORT_ALL_VARIABLES:
-STAGE_NAME ?= dev
-
-.PHONY: build clean deploy gomodgen tidy
-
-build: gomodgen
-	export GO111MODULE=on
-	env GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o bin/gateway src/api/gateway.go
-	env GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o bin/handler src/handler/processor.go
+deployAll: clean tidy build deploy
 
 clean:
-	rm -rf ./bin ./vendor go.sum
-
-deploy: clean build
-	sls deploy --verbose
+	rm -rf ./bin ./vendor go.sum ./.serverless
 
 tidy:
 	# To update and prune the dependencies
 	go mod tidy
+
+build:
+	export GO111MODULE=on
+	env GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o bin/gateway src/api/gateway.go
+	env GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o bin/handler src/handler/processor.go
+
+deploy:
+	sls deploy --verbose

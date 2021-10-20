@@ -3,6 +3,7 @@
 .idea
 .env
 go.sum
+.DS_Store
 
 
 # golang output binary directory

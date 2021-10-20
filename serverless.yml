@@ -18,14 +18,14 @@ service: task-lambda-sqs-dynamodb-api-v1
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: '2'
+frameworkVersion: '2.64.1'
 
 provider:
   name: aws
   runtime: go1.x
-  region: ap-southeast-2
+  region: ${env:AWS_REGION, 'ap-southeast-2'}
   profile: ${env:AWS_PROFILE, 'default'}
-  stage: ${env:STAGE_NAME, 'dev'}
+  stage: ${env:AWS_STAGE, 'dev'}
   lambdaHashingVersion: 20201221
 
   iamRoleStatements:
@@ -52,8 +52,11 @@ provider:
 
 package:
   individually: true
+  include:
+    - ./.env
   exclude:
-    - ./**
+    - ./*/**
+    - ./*
 
 functions:
   gateway:
