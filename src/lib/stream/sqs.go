@@ -59,13 +59,13 @@ func NewSQS(opts Config) (*Config, error) {
 		return nil, errors.New("Unable to create a service connection with AWS SQS")
 	}
 
-	//logger.Println("Fetching queue attributes")
-	//if _, err := svc.GetQueueAttributes(&sqs.GetQueueAttributesInput{
-	//	QueueUrl: &opts.URL,
-	//}); err != nil {
-	//	logger.Println("Unable to fetch queue attributes", err)
-	//	return nil, errors.New("Unable to get queue attributes")
-	//}
+	logger.Println("Fetching queue attributes")
+	if _, err := svc.GetQueueAttributes(&sqs.GetQueueAttributesInput{
+		QueueUrl: &opts.URL,
+	}); err != nil {
+		logger.Println("Unable to fetch queue attributes", err)
+		return nil, errors.New("Unable to get queue attributes")
+	}
 	logger.Println("Connected to Queue")
 
 	opts.svc = svc
