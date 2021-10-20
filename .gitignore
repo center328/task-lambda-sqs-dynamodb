@@ -30,4 +30,5 @@ vendor/
 
 tmp/
 out/
+.env
 .env*
