@@ -3,11 +3,11 @@ package stream
 import "errors"
 
 func validateOpts(opts Config) error {
-	if AWSRegion == "" {
+	if opts.AWSRegion == "" {
 		return errors.New("AWSRegion is required")
 	}
 
-	if URL == "" {
+	if opts.URL == "" {
 		return errors.New("A valid SQS URL is required")
 	}
 

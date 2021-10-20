@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/aws/aws-lambda-go v1.6.0
 	github.com/aws/aws-sdk-go v1.40.50
+	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/guregu/dynamo v1.11.0
 )

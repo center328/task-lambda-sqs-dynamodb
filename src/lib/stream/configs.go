@@ -8,6 +8,13 @@ import (
 // Config Wrapper for Config methods
 type Config struct {
 
+	AWSKey    string
+	AWSSecret string
+	AWSRegion string
+
+	// Poll from this SQS URL
+	URL string
+
 	// Maximum number of time to attempt AWS service connection
 	MaxRetries int
 

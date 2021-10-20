@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/aws/aws-sdk-go/aws"
 	awsSqs "github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/center328/task-lambda-sqs-dynamodb/src/config"
 	"github.com/center328/task-lambda-sqs-dynamodb/src/lib/db"
 	"github.com/google/uuid"
 	"log"
@@ -37,21 +38,29 @@ var queue *sqs.Config
 var dynamoDB db.IDynamoDB
 
 func init() {
+	env := config.Env()
 
 	logger = log.New(os.Stdout, logPrefix, log.LstdFlags|log.Lshortfile)
 
 	// Instantiate the queue with service connection
 	queue1, err1 := sqs.NewSQS(sqs.Config{
 		// aws config
+		AWSRegion:  		env.AWSRegion,
 		MaxRetries:			10,
 
-		BatchSize:         	10,
+		// aws creds - if provided, env is temporarily updated. Or you can add to env yourself
+		AWSKey:    			env.AWSKey,
+		AWSSecret: 			env.AWSSecret,
+
+		// sqs config
+		URL:               	env.SQSURL,
+		BatchSize:         	env.SQSBatchSize,
 		VisibilityTimeout: 	120,
 		WaitSeconds:       	20,
 
 		// misc config
 		RunInterval: 		20,
-		RunOnce:     		true,
+		RunOnce:     		env.RunOnce,
 		MaxHandlers: 		100,
 		BusyTimeout: 		30,
 	})

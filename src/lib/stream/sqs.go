@@ -30,6 +30,14 @@ func NewSQS(opts Config) (*Config, error) {
 		return nil, validateErr
 	}
 
+	// Validate creds
+	if opts.AWSKey != "" {
+		os.Setenv("AWS_ACCESS_KEY_ID", opts.AWSKey)
+	}
+	if opts.AWSSecret != "" {
+		os.Setenv("AWS_SECRET_ACCESS_KEY", opts.AWSSecret)
+	}
+
 	creds := credentials.NewEnvCredentials()
 	if _, err := creds.Get(); err != nil {
 		logger.Println("AWS Credential error", err)
@@ -37,7 +45,7 @@ func NewSQS(opts Config) (*Config, error) {
 	}
 
 	// Create AWS Config
-	awsConfig := aws.NewConfig().WithRegion(AWSRegion).WithMaxRetries(opts.MaxRetries).WithCredentials(creds)
+	awsConfig := aws.NewConfig().WithRegion(opts.AWSRegion).WithMaxRetries(opts.MaxRetries).WithCredentials(creds)
 	if awsConfig == nil {
 		logger.Println("Invalid AWS Config")
 		return nil, errors.New("Something is wrong with your AWS config parameters")
@@ -59,7 +67,7 @@ func NewSQS(opts Config) (*Config, error) {
 
 	logger.Println("Fetching queue attributes")
 	if _, err := svc.GetQueueAttributes(&sqs.GetQueueAttributesInput{
-		QueueUrl: &URL,
+		QueueUrl: &opts.URL,
 	}); err != nil {
 		logger.Println("Unable to fetch queue attributes", err)
 		return nil, errors.New("Unable to get queue attributes")
@@ -104,7 +112,7 @@ func (s *Config) Poll() {
 		childLogger.Printf("Polling for a maximum of %d messages", maxMsgs)
 
 		result, err := s.svc.ReceiveMessage(&sqs.ReceiveMessageInput{
-			QueueUrl:            &URL,
+			QueueUrl:            &s.URL,
 			MaxNumberOfMessages: &maxMsgs,
 			WaitTimeSeconds:     &s.WaitSeconds,
 			VisibilityTimeout:   &s.VisibilityTimeout,
@@ -168,7 +176,7 @@ func (s *Config) Enqueue(msgBatch []*sqs.SendMessageBatchRequestEntry) error {
 	logger.Printf(`Enqueuing %d messages`, len(msgBatch))
 
 	result, err := s.svc.SendMessageBatch(&sqs.SendMessageBatchInput{
-		QueueUrl: &URL,
+		QueueUrl: &s.URL,
 		Entries:  msgBatch,
 	})
 
@@ -181,7 +189,7 @@ func (s *Config) Delete(msg *sqs.Message) error {
 
 	logger.Printf("Delete message with ID %s", *msg.MessageId)
 	_, err := s.svc.DeleteMessage(&sqs.DeleteMessageInput{
-		QueueUrl:      &URL,
+		QueueUrl:      &s.URL,
 		ReceiptHandle: msg.ReceiptHandle,
 	})
 
@@ -203,7 +211,7 @@ func (s *Config) ChangeVisibilityTimeout(msg *sqs.Message, seconds int64) bool {
 		return retVal
 	}
 
-	strURL := &URL
+	strURL := &s.URL
 	receiptHandle := *msg.ReceiptHandle
 
 	changeMessageVisibilityInput := sqs.ChangeMessageVisibilityInput{}
