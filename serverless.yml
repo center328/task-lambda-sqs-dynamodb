@@ -38,13 +38,13 @@ provider:
             - Arn
     - Effect: "Allow"
       Action:
-        - dynamodb:DescribeTable
         - dynamodb:Query
         - dynamodb:Scan
         - dynamodb:GetItem
-        - dynamodb:PutItem
         - dynamodb:UpdateItem
+        - dynamodb:PutItem
         - dynamodb:DeleteItem
+        - dynamodb:BatchWriteItem
       Resource:
         - Fn::GetAtt:
             - RecordDynamoDbTable
@@ -83,6 +83,7 @@ functions:
 resources:
   Resources:
     RecordQueue:
+      DeletionPolicy: Retain
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: "RecordQueue"
@@ -99,4 +100,4 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-        TableName: 'tlsd-records-v1-${opt:stage, self:provider.stage}'
+        TableName: 'tlsd-records-v1-${self:provider.stage}'

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/center328/task-lambda-sqs-dynamodb/src/config"
 	"log"
 
 	"github.com/guregu/dynamo"
@@ -14,7 +15,7 @@ type DynamoDatabase struct {
 func (db *DynamoDatabase) RecordsReadAll() ([]RecordEntity, error) {
 	results := make([]RecordEntity, 0)
 	unique := make(map[string]RecordEntity)
-	table := db.DB.Table(TABLE_RECORDS)
+	table := db.DB.Table(config.Env().TableRecords)
 	itr := table.Scan().Iter()
 	var recordEntity RecordEntity
 	for itr.Next(&recordEntity) {
@@ -32,7 +33,7 @@ func (db *DynamoDatabase) RecordsReadAll() ([]RecordEntity, error) {
 
 func (db *DynamoDatabase) RecordsReadById(id string) (RecordEntity, error) {
 	var lastError error
-	table := db.DB.Table(TABLE_RECORDS)
+	table := db.DB.Table(config.Env().TableRecords)
 
 	var result RecordEntity
 	err := table.Get("@id", id).One(&result)
@@ -46,7 +47,7 @@ func (db *DynamoDatabase) RecordsReadById(id string) (RecordEntity, error) {
 func (db *DynamoDatabase) RecordsCreate(records []Record) error {
 	recordEntities := RecordsMapper(records)
 	var lastError error
-	table := db.DB.Table(TABLE_RECORDS)
+	table := db.DB.Table(config.Env().TableRecords)
 	for _, recordEntity := range recordEntities {
 		err := table.Put(recordEntity).Run()
 		if err != nil {
@@ -59,7 +60,7 @@ func (db *DynamoDatabase) RecordsCreate(records []Record) error {
 
 func (db *DynamoDatabase) RecordCreate(record RecordEntity) error {
 	var lastError error
-	table := db.DB.Table(TABLE_RECORDS)
+	table := db.DB.Table(config.Env().TableRecords)
 	err := table.Put(record).Run()
 	if err != nil {
 		log.Println("RecordsCreate error:", err)
@@ -70,7 +71,7 @@ func (db *DynamoDatabase) RecordCreate(record RecordEntity) error {
 
 func (db *DynamoDatabase) RecordUpdate(record RecordEntity) error {
 	var lastError error
-	table := db.DB.Table(TABLE_RECORDS)
+	table := db.DB.Table(config.Env().TableRecords)
 	err := table.Put(record).If("$ = ?", "@id", record.Id).Run()
 	if err != nil {
 		log.Println("RecordUpdate error:", err)
@@ -81,7 +82,7 @@ func (db *DynamoDatabase) RecordUpdate(record RecordEntity) error {
 
 func (db *DynamoDatabase) RecordsDelete(id string) error {
 	var lastError error
-	table := db.DB.Table(TABLE_RECORDS)
+	table := db.DB.Table(config.Env().TableRecords)
 	err := table.Delete("@id", id).If("$ = ?", "@id", id).Run()
 	if err != nil {
 		log.Println("RecordDelete error:", err)

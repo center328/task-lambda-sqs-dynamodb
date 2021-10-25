@@ -21,6 +21,8 @@ type Config struct {
 	SQSVisibilityTimeout int64  `env:"SQS_VISIBILITY_TIMEOUT" envDefault:"20"`
 	RunInterval          int    `env:"RUN_INTERVAL" envDefault:"10"`
 	RunOnce              bool   `env:"RUN_ONCE" envDefault:"true"`
+	DbEngine             string `env:"DB_ENGINE" envDefault:"DYNAMODB"`
+	TableRecords         string `env:"TABLE_RECORDS" envDefault:""`
 }
 
 var instance Config

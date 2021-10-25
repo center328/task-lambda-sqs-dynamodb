@@ -2,19 +2,19 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/center328/task-lambda-sqs-dynamodb/src/config"
 	"log"
 	"os"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	awsSqs "github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/center328/task-lambda-sqs-dynamodb/src/lib/db"
 	sqs "github.com/center328/task-lambda-sqs-dynamodb/src/lib/stream"
 	"time"
 )
 
 var logger *log.Logger
-var logPrefix = "(task1-gateway) "
+var logPrefix = "(task1-handler) "
 
 var queue *sqs.Config
 var dynamoDB db.IDynamoDB
@@ -28,13 +28,6 @@ func init() {
 	queue1, err1 := sqs.NewSQS(sqs.Config{
 		// aws config
 		AWSRegion:  		env.AWSRegion,
-		MaxRetries:			10,
-
-		// aws creds - if provided, env is temporarily updated. Or you can add to env yourself
-		AWSKey:    			env.AWSKey,
-		AWSSecret: 			env.AWSSecret,
-
-		// sqs config
 		URL:               	env.SQSURL,
 		BatchSize:         	env.SQSBatchSize,
 		VisibilityTimeout: 	120,
@@ -64,23 +57,27 @@ func init() {
 }
 
 // Handler is our lambda handler invoked by the `lambda.Start` function call
-func Handler() {
+func Handler(sqsEvent events.SQSEvent) {
+	if len(sqsEvent.Records) == 0 {
+		logger.Println("error: No SQS message passed to function")
+		return
+	}
 	// simulate processing a request for 2 seconds
-	queue.RegisterPollHandler(func(msg *awsSqs.Message) {
-		logger.Println("Wait 2 seconds for:", *msg.MessageId)
+	for _, msg := range sqsEvent.Records {
+		logger.Println("Wait 2 seconds for:", msg.MessageId)
 		wait := time.Duration(2) * time.Second
 		<-time.After(wait)
 
-		logger.Println("Processing:", *msg.MessageId, *msg.Body)
+		logger.Println("Processing:", msg.MessageId, msg.Body)
 
 		record := db.Record{}
-		err := json.Unmarshal([]byte(*msg.Body), &record)
+		err := json.Unmarshal([]byte(msg.Body), &record)
 
 		if err != nil {
 			logger.Println("xerr while converting json to struct", err)
 			//return Response{StatusCode: 500}, err
 		}
-		logger.Println("record", record)
+		logger.Println("record    ", record)
 
 		recordEn, err := dynamoDB.RecordsReadById(record.ID)
 
@@ -90,21 +87,23 @@ func Handler() {
 
 		recordEn.ProcessDate = time.Now().String()
 		recordEn.ProcessStatus = true
+		logger.Println("record    ", recordEn)
 
 		err1 := dynamoDB.RecordUpdate(recordEn)
 
 		if err1 != nil {
 			logger.Println("error update in repo", err1)
 		} else {
-
-			// Simulate processing time as 10 seconds
-			time.Sleep(10 * time.Second)
-			log.Println("Finished:", *msg.MessageId)
+			log.Println("Record Updated in repo")
+			//
+			//// Simulate processing time as 10 seconds
+			//time.Sleep(10 * time.Second)
+			log.Println("Finished:", msg.MessageId)
 
 			// Send back to the queue
 			queue.Delete(msg)
 		}
-	})
+	}
 
 	// Poll from the SQS queue
 	queue.Poll()

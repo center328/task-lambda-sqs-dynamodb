@@ -16,3 +16,16 @@ func RecordsMapper(records []Record) []RecordEntity {
 	}
 	return recordEntities
 }
+
+func RecordMapper(record Record) RecordEntity {
+
+	newRecordEntity := RecordEntity{
+		Id:				record.ID,
+		RequestID: 		record.RequestID,
+		RequestDate: 	record.RequestDate,
+		Data: 			record.Data,
+		ProcessDate: 	record.ProcessDate,
+		ProcessStatus: 	record.ProcessStatus,
+	}
+	return newRecordEntity
+}

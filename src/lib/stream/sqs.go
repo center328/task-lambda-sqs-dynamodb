@@ -3,14 +3,13 @@ package stream
 import (
 	"errors"
 	"fmt"
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/center328/task-lambda-sqs-dynamodb/src/config"
 	"log"
 	"os"
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
@@ -23,37 +22,9 @@ func init() {
 
 // NewSQS Instantiate a SQS instance
 func NewSQS(opts Config) (*Config, error) {
-	// Validate parameters
-	validateErr := validateOpts(opts)
-	if validateErr != nil {
-		logger.Println(validateErr)
-		return nil, validateErr
-	}
-
-	logger.Println("configs", fmt.Sprintf("%#v", opts))
-
-	creds := credentials.NewEnvCredentials()
-	if _, err := creds.Get(); err != nil {
-		logger.Println("AWS Credential error", err)
-		return nil, errors.New("Invalid AWS credentials. Please make sure that `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` is present in the env")
-	}
-
-	// Create AWS Config
-	awsConfig := aws.NewConfig().WithRegion(opts.AWSRegion).WithMaxRetries(opts.MaxRetries).WithCredentials(creds)
-	if awsConfig == nil {
-		logger.Println("Invalid AWS Config")
-		return nil, errors.New("Something is wrong with your AWS config parameters")
-	}
-
-	// Establish a session
-	newSession := session.Must(session.NewSession(awsConfig))
-	if newSession == nil {
-		logger.Println("Unable to create session")
-		return nil, errors.New("Unable to create session")
-	}
 
 	// Create a service connection
-	svc := sqs.New(newSession)
+	svc := sqs.New(config.AwsSession)
 	if svc == nil {
 		logger.Println("Unable to connect to SQS")
 		return nil, errors.New("Unable to create a service connection with AWS SQS")
@@ -175,16 +146,19 @@ func (s *Config) Enqueue(msgBatch []*sqs.SendMessageBatchRequestEntry) error {
 	})
 
 	logger.Printf("Enqueue result: %d success, %d failed", len(result.Successful), len(result.Failed))
+	if err != nil || len(result.Failed) > 0 {
+		logger.Printf("Enqueue results:    ", err, "    ", result.Failed)
+	}
 	return err
 }
 
 // Delete a SQS message from the queue
-func (s *Config) Delete(msg *sqs.Message) error {
+func (s *Config) Delete(msg events.SQSMessage) error {
 
-	logger.Printf("Delete message with ID %s", *msg.MessageId)
+	logger.Printf("Delete message with ID %s", msg.MessageId)
 	_, err := s.svc.DeleteMessage(&sqs.DeleteMessageInput{
 		QueueUrl:      &s.URL,
-		ReceiptHandle: msg.ReceiptHandle,
+		ReceiptHandle: &msg.ReceiptHandle,
 	})
 
 	return err

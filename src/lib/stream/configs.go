@@ -7,9 +7,6 @@ import (
 
 // Config Wrapper for Config methods
 type Config struct {
-
-	AWSKey    string
-	AWSSecret string
 	AWSRegion string
 
 	// Poll from this SQS URL

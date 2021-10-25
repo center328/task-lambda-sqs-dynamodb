@@ -26,11 +26,6 @@ type RequestBody struct {
 	EventsCount	int		`json:"EventsCount"`
 }
 
-type ResponseBody struct {
-	Id      	string	`json:"Id,omitempty"`
-	Description	string	`json:"Description,omitempty"`
-}
-
 var logger *log.Logger
 var logPrefix = "(task1-gateway) "
 
@@ -46,13 +41,6 @@ func init() {
 	queue1, err1 := sqs.NewSQS(sqs.Config{
 		// aws config
 		AWSRegion:  		env.AWSRegion,
-		MaxRetries:			10,
-
-		// aws creds - if provided, env is temporarily updated. Or you can add to env yourself
-		AWSKey:    			env.AWSKey,
-		AWSSecret: 			env.AWSSecret,
-
-		// sqs config
 		URL:               	env.SQSURL,
 		BatchSize:         	env.SQSBatchSize,
 		VisibilityTimeout: 	120,
@@ -134,8 +122,8 @@ func createMessagesToEnqueue(msgs []db.Record)  []*awsSqs.SendMessageBatchReques
 		message := &awsSqs.SendMessageBatchRequestEntry{
 			Id:                     aws.String(`uniqueID_` + strconv.Itoa(i)),
 			MessageBody:            aws.String(string(data)),
-			MessageDeduplicationId: aws.String(`dupID_` + strconv.Itoa(i)),
-			MessageGroupId:         aws.String("task1Queue"),
+			//MessageDeduplicationId: aws.String(`dupID_` + strconv.Itoa(i)),
+			//MessageGroupId:         aws.String("task1Queue"),
 		}
 		msgBatch = append(msgBatch, message)
 	}
@@ -159,6 +147,7 @@ func Handler(request Request) (Response, error) {
 	errSQS := queue.Enqueue(createMessagesToEnqueue(reqs))
 
 	if errSQS == nil {
+		logger.Println("Queue Insert Success...")
 		errDB := dynamoDB.RecordsCreate(reqs)
 		if errDB != nil {
 			logger.Println(errDB)
